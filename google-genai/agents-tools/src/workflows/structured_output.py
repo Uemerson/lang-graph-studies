@@ -11,7 +11,6 @@ class Feedback(BaseModel):
     """Schema for structured output parsing."""
 
     sentiment: Literal["positive", "neutral", "negative"]
-    summary: str
 
 
 model_name = os.getenv("MODEL", "gemini-1.5-pro")
@@ -23,15 +22,28 @@ model = ChatGoogleGenerativeAI(
     temperature=0,
 )
 structured_model = model.with_structured_output(
-    schema=Feedback.model_json_schema(), method="json_schema"
+    schema=Feedback.model_json_schema(),
+    method="json_schema",
+    include_raw=True,
 )
 
 
 def structured_output_workflow():
     """Workflow demonstrating structured output parsing."""
     response = structured_model.invoke("The new UI is great!")
-    sentiment = response["sentiment"]  # "positive"
-    summary = response["summary"]  # "The user expresses positive..."
 
-    print("response:", response)
-    print(sentiment, summary)
+    parsed = response["parsed"]
+    usage_metadata = response["raw"].usage_metadata
+
+    print("response")
+    print(response)
+    print()
+    print()
+
+    print("parsed")
+    print(parsed)
+    print()
+    print()
+
+    print("usage_metadata")
+    print(usage_metadata)
