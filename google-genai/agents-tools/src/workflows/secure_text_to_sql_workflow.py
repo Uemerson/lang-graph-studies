@@ -16,10 +16,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 
-# =============================
-# Semantic Model (Source of Truth)
-# =============================
-
 SEMANTIC_MODEL = {
     "table": "sales_summary",
     "metrics": {
@@ -44,22 +40,12 @@ SEMANTIC_MODEL = {
 }
 
 
-# =============================
-# LangGraph State
-# =============================
-
-
 class QueryState(TypedDict, total=False):
     """State for the text-to-SQL workflow."""
 
     question: str
     intent: Dict
     sql: str
-
-
-# =============================
-# Intent Schema (LLM Output)
-# =============================
 
 
 class Intent(BaseModel):
@@ -90,10 +76,6 @@ class Intent(BaseModel):
     )
 
 
-# =============================
-# LLM Setup
-# =============================
-
 model_name = os.getenv("MODEL", "gemini-1.5-pro")
 api_key = os.getenv("GOOGLE_API_KEY", "")
 
@@ -110,22 +92,12 @@ intent_structured_model = model.with_structured_output(
 )
 
 
-# =============================
-# Node 1 — Interpret Question
-# =============================
-
-
 def interpret_question(state: QueryState) -> Dict:
     """
     Uses the LLM ONLY to map the user question into a constrained intent.
     """
     response = intent_structured_model.invoke(state["question"])
     return {"intent": response["parsed"]}
-
-
-# =============================
-# Node 2 — Hard Validation
-# =============================
 
 
 def validate_intent(state: QueryState) -> QueryState:
@@ -144,11 +116,6 @@ def validate_intent(state: QueryState) -> QueryState:
         raise ValueError("Invalid time range")
 
     return state
-
-
-# =============================
-# Node 3 — Deterministic SQL Builder
-# =============================
 
 
 def build_sql(state: QueryState) -> Dict:
@@ -183,11 +150,6 @@ def build_sql(state: QueryState) -> Dict:
     return {"sql": sql}
 
 
-# =============================
-# Node 4 — Final Response
-# =============================
-
-
 def final_response(state: QueryState) -> Dict:
     """
     Final node: returns safe SQL only.
@@ -196,11 +158,6 @@ def final_response(state: QueryState) -> Dict:
         "sql": state["sql"],
         "message": "Query generated using a safe, controlled approach.",
     }
-
-
-# =============================
-# Build and Run LangGraph
-# =============================
 
 
 def secure_text_to_sql_workflow():
@@ -233,7 +190,3 @@ def secure_text_to_sql_workflow():
         print("\nQUESTION:", q)
         result = app.invoke({"question": q})
         print(result["sql"])
-
-
-if __name__ == "__main__":
-    secure_text_to_sql_workflow()
