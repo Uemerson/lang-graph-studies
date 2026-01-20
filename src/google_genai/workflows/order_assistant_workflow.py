@@ -9,9 +9,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-# ======================================================
-# LLM configuration
-# ======================================================
 model = os.getenv("MODEL", "gemini-1.5-pro")
 api_key = os.getenv("GOOGLE_API_KEY", "")
 
@@ -22,9 +19,6 @@ llm = ChatGoogleGenerativeAI(
 )
 
 
-# ======================================================
-# Helper to save graph
-# ======================================================
 def save_graph(graph: CompiledStateGraph, path: str = "graph.png") -> None:
     """Saves the workflow graph as a Mermaid PNG."""
 
@@ -33,9 +27,6 @@ def save_graph(graph: CompiledStateGraph, path: str = "graph.png") -> None:
         f.write(png)
 
 
-# ======================================================
-# Tools (realistic domain)
-# ======================================================
 @tool
 def get_order_status(order_id: str) -> str:
     """Returns the status of an order."""
@@ -72,17 +63,11 @@ def apply_discount(total: float, coupon: str) -> float:
     return total
 
 
-# ======================================================
-# Tool binding
-# ======================================================
 tools = [get_order_status, calculate_order_total, apply_discount]
 tools_by_name = {tool.name: tool for tool in tools}
 llm_with_tools = llm.bind_tools(tools)
 
 
-# ======================================================
-# Nodes
-# ======================================================
 def llm_call(state: MessagesState):
     """LLM decides what to do next."""
 
@@ -121,9 +106,6 @@ def tool_node(state: MessagesState):
     return {"messages": results}
 
 
-# ======================================================
-# Conditional routing
-# ======================================================
 def should_continue(state: MessagesState) -> Literal["tool_node", "end"]:
     """
     Decide whether to continue to the tool node or end
@@ -138,9 +120,6 @@ def should_continue(state: MessagesState) -> Literal["tool_node", "end"]:
     return END
 
 
-# ======================================================
-# Build and run
-# ======================================================
 def order_agent_workflow():
     """Builds and runs the order assistant workflow."""
 

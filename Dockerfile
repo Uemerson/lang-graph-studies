@@ -12,4 +12,5 @@ COPY src ./src
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "PYTHONPATH=. python src/main.py"]
+# CMD ["sh", "-c", "PYTHONPATH=. python src/main.py \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "PYTHONPATH=. python src/main.py \"$@\"", "--"]
